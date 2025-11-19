@@ -67,3 +67,10 @@ engvid-learning-tracker/
 │   └── analyzer.py      # (Próximamente) Lógica de estadísticas
 ├── .gitignore
 └── README.md
+```
+
+## ⚠️Disclaimer Ético
+
+Este proyecto es una herramienta educativa y de uso personal para gestionar el progreso de aprendizaje. No tiene relación oficial con EngVid. El script de scraping respeta los tiempos de carga para no saturar el servidor. Por favor, usa esta herramienta responsablemente.
+
+Desarrollado con 💙 y Python.
