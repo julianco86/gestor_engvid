@@ -1,27 +1,41 @@
 import sqlite3
+import os
 
-# Conectar al archivo que creó el script anterior
-conn = sqlite3.connect('engvid_database.db')
-cursor = conn.cursor()
+# 1. Aseguramos la ruta correcta al archivo .db
+ruta_actual = os.path.dirname(__file__)
+ruta_db = os.path.join(ruta_actual, 'engvid_database.db')
 
-# Contar cuántas filas hay en la tabla videos
-cursor.execute("SELECT COUNT(*) FROM videos")
-total = cursor.fetchone()[0]
+try:
+    conn = sqlite3.connect(ruta_db)
+    cursor = conn.cursor()
 
-# Ver el primer video para estar seguros
-cursor.execute("SELECT titulo FROM videos LIMIT 1")
-primer_video = cursor.fetchone()[0]
+    print("--- 📊 RESUMEN DE LA BASE DE DATOS ---")
 
+    # Consulta 1: Total de videos
+    cursor.execute("SELECT COUNT(*) FROM videos")
+    total = cursor.fetchone()[0]
+    print(f"✅ Total de registros: {total}")
 
-print(f"📊 Total de videos en la DB: {total}")
-print(f"🎬 Título del primer video: {primer_video}")
+    # Consulta 2: Conteo por Niveles (Agrupación)
+    print("\n--- 📈 VIDEOS POR NIVEL ---")
+    cursor.execute("SELECT nivel, COUNT(*) FROM videos GROUP BY nivel ORDER BY COUNT(*) DESC")
+    niveles = cursor.fetchall()
+    
+    for nivel, cantidad in niveles:
+        # Un poco de formato visual
+        progreso_visual = "█" * int(cantidad / 100) # Una barra simple
+        print(f"{nivel.ljust(15)}: {str(cantidad).ljust(5)} {progreso_visual}")
 
+    # Consulta 3: Muestra de datos con URL
+    print("\n--- 🎬 ÚLTIMOS 5 VIDEOS AGREGADOS (Muestra) ---")
+    cursor.execute("SELECT id, titulo, nivel, url FROM videos ORDER BY id DESC LIMIT 5")
+    ultimos = cursor.fetchall()
+    
+    for vid in ultimos:
+        print(f"ID: {vid[0]} | {vid[2]} | {vid[1]}")
+        print(f"   🔗 URL: {vid[3]}")
 
-# Ver los primeros 10 videos
-cursor.execute("SELECT id, titulo FROM videos LIMIT 10")
-primeros_10_videos = cursor.fetchall()
+    conn.close()
 
-for i, video in enumerate(primeros_10_videos, start=1):
-    print(f"🎬 Video {i}: {video[1]}")
-
-conn.close()
+except Exception as e:
+    print(f"❌ Error al consultar la base de datos: {e}")
