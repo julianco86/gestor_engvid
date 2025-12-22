@@ -48,3 +48,9 @@ df["Detalles"] = df["Detalles"].str.replace(level_regex, '', regex=True).str.str
 print(df.head(50))
 print(f"\n[{len(df)} filas x {len(df.columns)} columnas]")
 
+
+# Generate new CSV file with cleaned data
+ruta_nuevo_csv = os.path.join(ruta_proyecto, "data", "engvid_completo_limpio.csv")
+df.to_csv(ruta_nuevo_csv, index=False)
+print(f"CSV limpio guardado en: {ruta_nuevo_csv}")
+
