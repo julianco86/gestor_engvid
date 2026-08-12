@@ -14,28 +14,32 @@ El objetivo es dejar de preguntarse "¿qué video vi ayer?" y empezar a responde
 
 ## 🚀 Funcionalidades Principales
 
-### ✅ Actuales (MVP)
+### ✅ Funcionalidades
 - **Extracción Masiva de Datos:** Script automatizado con **Selenium** que recopila el catálogo completo de lecciones (Título, Nivel, Categoría, URL) superando la carga dinámica (JavaScript/Lazy Loading).
-- **Exportación Estructurada:** Generación automática de bases de datos en formato `.csv` para su posterior análisis.
-
-### 🌟 Hoja de Ruta (Roadmap)
-- [ ] **Tracker de Historial:** Marcar videos como "Visto" / "Pendiente".
-- [ ] **Registro de Quizzes:** Sistema para ingresar y almacenar la nota obtenida en cada quiz de lección.
-- [ ] **Dashboard de Estadísticas:** Análisis visual de datos:
-    - Porcentaje de videos completados por nivel.
-    - Promedio de calificaciones en quizzes.
-    - Temas más estudiados vs. temas olvidados.
-- [ ] **Recomendador:** Sugerencia de videos basada en áreas donde el puntaje de los quizzes sea bajo.
+- **Limpieza y Procesamiento:** Normalización de niveles (incluye videos con varios niveles) y extracción de categorías con **Pandas**.
+- **Base de Datos SQLite:** Esquema con dos tablas: `videos` (catálogo) y `progreso` (historial personal).
+- **Tracker de Historial:** Marcar videos como "Visto" / "Pendiente" desde un menú interactivo de consola.
+- **Registro de Quizzes:** Ingresar la nota obtenida en cada quiz de lección (0-10) con contador de intentos.
+- **Dashboard de Estadísticas:** Porcentaje de videos completados por nivel, promedio de calificaciones por categoría, temas más estudiados.
+- **Dashboard Web (FastAPI):** Panel visual interactivo en el navegador con gráficos (Chart.js), filtros de videos, y edición de progreso (marcar visto, notas de quiz).
+- **Recomendador:** Sugerencia de videos pendientes en las áreas donde el puntaje de los quizzes es más bajo.
 
 ## 🛠️ Tecnologías Utilizadas
 
 * **Lenguaje:** Python 3
 * **Web Scraping:** Selenium Webdriver (Manejo de DOM y contenido dinámico).
 * **Gestión de Drivers:** Webdriver Manager.
-* **Almacenamiento de Datos:** CSV (Fase inicial) / SQLite (Planeado).
-* **Análisis de Datos:** Pandas (Planeado).
+* **Almacenamiento de Datos:** CSV y SQLite (vía SQLAlchemy).
+* **Análisis de Datos:** Pandas.
 
 ## ⚙️ Instalación y Uso
+
+> **Modo rápido (recomendado):** seguí la [`GUIA_DE_USO.md`](GUIA_DE_USO.md).
+> 1. Instalá Python 3.10+ (marcando "Add Python to PATH").
+> 2. Doble clic en `setup.bat` (una sola vez).
+> 3. Doble clic en `run.bat` — se abre el navegador con el dashboard.
+
+### Modo desarrollador
 
 1.  **Clonar el repositorio:**
     ```bash
@@ -45,26 +49,57 @@ El objetivo es dejar de preguntarse "¿qué video vi ayer?" y empezar a responde
 
 2.  **Instalar dependencias:**
     ```bash
-    pip install selenium webdriver-manager pandas
+    pip install -r requirements.txt
     ```
 
-3.  **Ejecutar el Scraper:**
-    Este script abrirá el navegador, extraerá el catálogo actual de EngVid y generará el archivo maestro.
+3.  **Pipeline de datos:**
     ```bash
-    python scraper.py
+    # 1. (Opcional) Extraer el catálogo actual de EngVid con Selenium
+    python src/scraper_selenium.py
+
+    # 2. Limpiar y normalizar el CSV
+    python src/procesar_data.py
+
+    # 3. Regenerar la base de datos SQLite
+    python src/crearBD.py
     ```
 
-4.  **Consultar los datos:**
-    Se generará un archivo `engvid_completo.csv` en la raíz del proyecto.
+4.  **Uso diario:**
+    ```bash
+    # Menú interactivo: marcar visto/pendiente, registrar notas, ver progreso
+    python src/tracker.py
+
+    # Dashboard de estadísticas y recomendaciones
+    python src/analyzer.py
+    # Solo recomendaciones
+    python src/analyzer.py --recomendar
+
+    # Dashboard web (FastAPI) — abrir http://127.0.0.1:8000
+    python -m uvicorn src.api:app --reload
+    ```
 
 ## 📂 Estructura del Proyecto
 
 ```text
-engvid-learning-tracker/
-├── data/                # Archivos CSV generados
-├── src/                 # Código fuente
-│   ├── scraper.py       # Lógica de extracción con Selenium
-│   └── analyzer.py      # (Próximamente) Lógica de estadísticas
+gestor_engvid/
+├── data/                    # Archivos generados (CSV y base de datos)
+├── src/                     # Código fuente
+│   ├── scraper_selenium.py  # Extracción con Selenium
+│   ├── procesar_data.py     # Limpieza y normalización (Pandas)
+│   ├── crearBD.py           # Creación de la base SQLite
+│   ├── consultas.py         # Queries reutilizables (CLI y web)
+│   ├── api.py               # Backend FastAPI (JSON + frontend)
+│   ├── web/                 # Frontend estático (HTML/CSS/JS + Chart.js)
+│   ├── tracker.py           # CLI: historial y quizzes
+│   ├── analyzer.py          # Dashboard de estadísticas y recomendador
+│   ├── categorias.py        # Definición de categorías/niveles conocidos
+│   ├── conexion.py          # Rutas y conexión a la base de datos
+│   └── modelos.py           # Modelos ORM (videos, progreso)
+├── requirements.txt          # Dependencias completas (incluye scraper)
+├── requirements-web.txt      # Dependencias livianas (solo panel web)
+├── setup.bat                 # Instalación automática (Windows)
+├── run.bat                   # Arranque del panel (Windows)
+├── GUIA_DE_USO.md            # Guía para colaboradoras/es
 ├── .gitignore
 └── README.md
 ```

@@ -1,56 +1,63 @@
-import pandas as pd
 import os
+import re
+import sys
 
-# -----------------------
-# Cargar CSV
-# -----------------------
-ruta_base = os.path.dirname(os.path.abspath(__file__))
-ruta_proyecto = os.path.dirname(ruta_base)
-ruta_csv = os.path.join(ruta_proyecto, "data", "engvid_completo.csv")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.stdout.reconfigure(encoding="utf-8")
 
-print("Cargando CSV desde:", ruta_csv)
-try:
-    df = pd.read_csv(ruta_csv)
-except UnicodeDecodeError:
-    # Intenta con otro encoding si falla UTF-8
-    df = pd.read_csv(ruta_csv, encoding='latin-1')
+import pandas as pd
+
+from src.categorias import NIVEL_ORDEN, categorias_como_texto
+from src.conexion import RUTA_CSV_CRUDO, RUTA_CSV_LIMPIO
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
 
-# -----------------------
-# Procesar Detalles
-# -----------------------
+print("Cargando CSV desde:", RUTA_CSV_CRUDO)
+try:
+    df = pd.read_csv(RUTA_CSV_CRUDO)
+except UnicodeDecodeError:
+    df = pd.read_csv(RUTA_CSV_CRUDO, encoding="latin-1")
 
-# 1. 🔍 Extraer Nivel usando una Expresión Regular
-# Busca 'Beginner', 'Intermediate', o 'Advanced' opcionalmente precedido por 'Nivel-', 'Level-' o un número (ej. '2-').
-# Se usa '(\d+-)?' para capturar 0 o 1 dígito seguido de un guión, que es opcional.
-# Se usa '(Intermediate|Beginner|Advanced)' para capturar el nivel exacto.
-# -----------------------
-# Procesar Detalles (Versión Corregida para el error)
-# -----------------------
-
-# 1. 🔍 Extraer Nivel usando una Expresión Regular
-level_regex = r'(\d+-)?(Intermediate|Beginner|Advanced)'
-
-# Corregido: Usamos expand=True para obtener un DataFrame con las dos capturas.
-# Luego seleccionamos la columna [1] (que contiene el Nivel) y luego aplicamos .fillna()
-df["Nivel"] = df["Detalles"].str.extract(level_regex, expand=True)[1].fillna('Unspecified')
-#                                          ^^^^^^^^^^^^^^^^^^^  ^^^
-
-# 2. 🧹 Limpiar la columna Detalles (eliminar el Nivel y sus posibles prefijos)
-df["Detalles"] = df["Detalles"].str.replace(level_regex, '', regex=True).str.strip().str.replace(r'\s{2,}', ' ', regex=True)
+nivel_regex = re.compile(r"(\d+-)?(Beginner|Intermediate|Advanced)", re.IGNORECASE)
 
 
-# -----------------------
-# Mostrar resultado (50 primeras filas)
-# -----------------------
-print(df.head(50))
+def extraer_niveles(texto):
+    """Devuelve todos los niveles encontrados en el texto (ordenados)."""
+    if not isinstance(texto, str):
+        return []
+    encontrados = []
+    for m in nivel_regex.finditer(texto):
+        nivel = m.group(2).capitalize()
+        if nivel not in encontrados:
+            encontrados.append(nivel)
+    return encontrados
+
+
+def nivel_principal(texto):
+    """Devuelve el nivel más alto del texto (o 'Unspecified')."""
+    niveles = extraer_niveles(texto)
+    if not niveles:
+        return "Unspecified"
+    return max(niveles, key=lambda n: NIVEL_ORDEN[n])
+
+
+df["Niveles"] = df["Detalles"].apply(extraer_niveles).apply(lambda ls: ", ".join(ls))
+df["Nivel"] = df["Detalles"].apply(nivel_principal)
+
+df["Detalles"] = (
+    df["Detalles"]
+    .str.replace(r"\d+-?(Beginner|Intermediate|Advanced)", "", regex=True)
+    .str.replace(r"[\s|]+", " ", regex=True)
+    .str.strip()
+)
+
+df["Categorias"] = df["Detalles"].apply(categorias_como_texto)
+
+df.to_csv(RUTA_CSV_LIMPIO, index=False)
+
+print(df[["ID", "Titulo", "Nivel", "Categorias"]].head(50).to_string(index=False))
 print(f"\n[{len(df)} filas x {len(df.columns)} columnas]")
-
-
-# Generate new CSV file with cleaned data
-ruta_nuevo_csv = os.path.join(ruta_proyecto, "data", "engvid_completo_limpio.csv")
-df.to_csv(ruta_nuevo_csv, index=False)
-print(f"CSV limpio guardado en: {ruta_nuevo_csv}")
-
+print("Distribución por nivel:")
+print(df["Nivel"].value_counts().to_string())
+print(f"\nCSV limpio guardado en: {RUTA_CSV_LIMPIO}")

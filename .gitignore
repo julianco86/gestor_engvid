@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Datos generados (la base se regenera con crearBD.py)
+data/*.db
+
+# IDE
+.vscode/
+.idea/

@@ -1,33 +1,30 @@
-import sqlite3
 import os
+import sys
 
-# 1. Localizar la base de datos
-# Obtenemos la ruta de la carpeta donde está este script
-ruta_carpeta = os.path.dirname(os.path.abspath(__file__))
-# Unimos esa ruta con el nombre del archivo
-ruta_db = os.path.join(ruta_carpeta, 'engvid_database.db')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# 2. Conectar y consultar
+from src.conexion import RUTA_DB
+from src.modelos import Progreso, Video
+
 try:
-    conn = sqlite3.connect(ruta_db)
-    cursor = conn.cursor()
+    from sqlalchemy import func, select
 
-    # Contar cuántas filas hay en la tabla videos
-    cursor.execute("SELECT COUNT(*) FROM videos")
-    total = cursor.fetchone()[0]
+    from src.conexion import obtener_sesion
 
-    # Ver el primer video para estar seguros
-    cursor.execute("SELECT titulo FROM videos LIMIT 1")
-    primer_video = cursor.fetchone()[0]
+    sesion = obtener_sesion()
+    total = sesion.scalar(select(func.count()).select_from(Video))
+    primer_video = sesion.scalar(select(Video.titulo).order_by(Video.id))
+    progresos = sesion.scalar(select(func.count()).select_from(Progreso))
 
-    print(f"📂 Archivo consultado en: {ruta_db}")
-    print(f"📊 Total de videos en la DB: {total}")
-    print(f"🎬 Título del primer video: {primer_video}")
+    print(f"Archivo consultado en: {RUTA_DB}")
+    print(f"Total de videos en la DB: {total}")
+    print(f"Titulo del primer video: {primer_video}")
+    print(f"Registros de progreso: {progresos}")
 
-    conn.close()
+    sesion.close()
 
-except sqlite3.OperationalError:
-    print(f"❌ Error: No se encontró el archivo '{ruta_db}'.")
-    print("Asegúrate de que el script y la base de datos estén en la misma carpeta.")
+except FileNotFoundError:
+    print(f"Error: No se encontro la base de datos '{RUTA_DB}'.")
+    print("Ejecuta primero: python src/crearBD.py")
 except Exception as e:
-    print(f"❌ Ocurrió un error: {e}")
+    print(f"Ocurrio un error: {e}")

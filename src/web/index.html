@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EngVid Learning Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+  <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+  <header>
+    <h1>📚 EngVid Learning Tracker</h1>
+    <p>Tu panel personal de progreso en inglés</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="resumen">Resumen</button>
+    <button class="tab" data-tab="graficos">Gráficos</button>
+    <button class="tab" data-tab="videos">Videos</button>
+    <button class="tab" data-tab="recomendaciones">Recomendaciones</button>
+  </nav>
+
+  <main>
+    <section id="resumen" class="panel active">
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <section id="graficos" class="panel">
+      <div class="chart-box">
+        <h2>% Completado por nivel</h2>
+        <canvas id="chartNivel"></canvas>
+      </div>
+      <div class="chart-box">
+        <h2>Videos y % por categoría</h2>
+        <canvas id="chartCategoria"></canvas>
+      </div>
+      <div class="chart-box">
+        <h2>Promedio de notas por categoría</h2>
+        <canvas id="chartPromedio"></canvas>
+      </div>
+    </section>
+
+    <section id="videos" class="panel">
+      <div class="filtros">
+        <select id="fNivel"></select>
+        <select id="fCategoria"></select>
+        <input id="fTexto" type="text" placeholder="Buscar por título...">
+        <select id="fEstado">
+          <option value="">Todos</option>
+          <option value="pendientes">Pendientes</option>
+          <option value="vistos">Vistos</option>
+        </select>
+        <button id="btnBuscar" class="btn">Buscar</button>
+        <button id="btnReset" class="btn outline">Limpiar</button>
+      </div>
+
+      <div class="tabla-wrap">
+        <table id="tablaVideos">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Título</th>
+              <th>Nivel</th>
+              <th>Categorías</th>
+              <th>Estado</th>
+              <th>Nota</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="paginacion">
+        <button id="btnPrev" class="btn outline">← Anterior</button>
+        <span id="pagInfo"></span>
+        <button id="btnNext" class="btn outline">Siguiente →</button>
+      </div>
+    </section>
+
+    <section id="recomendaciones" class="panel">
+      <div id="recomLista"></div>
+    </section>
+  </main>
+
+  <script src="/static/vendor/chart.umd.min.js"></script>
+  <script src="/static/app.js?v=4"></script>
+</body>
+</html>
