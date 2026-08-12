@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy import func, select
 
@@ -179,3 +179,53 @@ def recomendaciones(sesion, limite_categorias=3, videos_por_categoria=5):
         pendientes = [_video_a_dict(v) for v in sesion.scalars(q).all()]
         resultado.append({**item, "pendientes": pendientes})
     return resultado
+
+
+def racha(sesion):
+    fechas = sesion.scalars(
+        select(Progreso.fecha_visto).where(Progreso.completado, Progreso.fecha_visto.isnot(None))
+    ).all()
+    dias = sorted({d if isinstance(d, date) else date.fromisoformat(str(d)) for d in fechas})
+    if not dias:
+        return {"actual": 0, "record": 0, "dias_activos": 0}
+
+    hoy = date.today()
+    actual = 0
+    cursor = hoy if hoy in dias else hoy - timedelta(days=1)
+    while cursor in dias:
+        actual += 1
+        cursor -= timedelta(days=1)
+
+    record = 0
+    seguidos = 0
+    previo = None
+    for d in dias:
+        seguidos = seguidos + 1 if previo is None or (d - previo).days == 1 else 1
+        record = max(record, seguidos)
+        previo = d
+
+    return {"actual": actual, "record": record, "dias_activos": len(dias)}
+
+
+def insights(sesion):
+    r = resumen(sesion)
+    lineas = []
+    if r["vistos"] == 0:
+        lineas.append("Todavía no marcaste ningún video como visto. ¡Marcá tu primer video y arrancá la racha!")
+        return lineas
+
+    con_promedio = [c for c in por_categoria(sesion) if c["promedio"] is not None]
+    if con_promedio:
+        debil = min(con_promedio, key=lambda c: c["promedio"])
+        fuerte = max(con_promedio, key=lambda c: c["promedio"])
+        lineas.append(f"Área más débil: {debil['categoria']} (promedio {debil['promedio']:.2f})")
+        if fuerte["categoria"] != debil["categoria"]:
+            lineas.append(f"Tu mejor área: {fuerte['categoria']} (promedio {fuerte['promedio']:.2f})")
+
+    rch = racha(sesion)
+    if rch["actual"] >= 2:
+        lineas.append(f"¡Vas {rch['actual']} días seguidos de estudio! Seguí así.")
+    elif rch["actual"] == 1:
+        lineas.append("Llevás 1 día de racha. ¡Volvé mañana para mantenerla!")
+
+    return lineas

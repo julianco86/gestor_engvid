@@ -23,20 +23,15 @@
   <main>
     <section id="resumen" class="panel active">
       <div class="cards" id="cards"></div>
+      <div id="insights"></div>
     </section>
 
     <section id="graficos" class="panel">
       <div class="chart-box">
-        <h2>% Completado por nivel</h2>
-        <canvas id="chartNivel"></canvas>
-      </div>
-      <div class="chart-box">
-        <h2>Videos y % por categoría</h2>
-        <canvas id="chartCategoria"></canvas>
-      </div>
-      <div class="chart-box">
-        <h2>Promedio de notas por categoría</h2>
-        <canvas id="chartPromedio"></canvas>
+        <h2>Progreso global</h2>
+        <div class="chart-canvas">
+          <canvas id="chartGlobal"></canvas>
+        </div>
       </div>
     </section>
 
@@ -84,6 +79,6 @@
   </main>
 
   <script src="/static/vendor/chart.umd.min.js"></script>
-  <script src="/static/app.js?v=4"></script>
+  <script src="/static/app.js?v=5"></script>
 </body>
 </html>

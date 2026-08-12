@@ -10,11 +10,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from src.consultas import (
+    insights,
     listar_videos,
     marcar_visto,
     obtener_video,
     por_categoria,
     por_nivel,
+    racha,
     recomendaciones,
     registrar_nota,
     resumen,
@@ -59,6 +61,16 @@ def api_por_nivel(sesion=Depends(get_db)):
 @app.get("/api/por-categoria")
 def api_por_categoria(sesion=Depends(get_db)):
     return por_categoria(sesion)
+
+
+@app.get("/api/racha")
+def api_racha(sesion=Depends(get_db)):
+    return racha(sesion)
+
+
+@app.get("/api/insights")
+def api_insights(sesion=Depends(get_db)):
+    return insights(sesion)
 
 
 @app.get("/api/recomendaciones")

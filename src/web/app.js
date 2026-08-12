@@ -38,14 +38,19 @@ document.querySelectorAll(".tab").forEach((btn) => {
 // ---------- Resumen ----------
 async function cargarResumen() {
   const el = document.getElementById("cards");
+  const insEl = document.getElementById("insights");
   try {
-    const r = await fetchJSON("/api/resumen");
+    const [r, rch, ins] = await Promise.all([
+      fetchJSON("/api/resumen"),
+      fetchJSON("/api/racha"),
+      fetchJSON("/api/insights"),
+    ]);
     const cards = [
       { clase: "acento", etiqueta: "Videos totales", valor: r.total },
       { clase: "ok", etiqueta: "Vistos", valor: r.vistos },
       { clase: "warn", etiqueta: "Pendientes", valor: r.pendientes },
       { clase: "acento", etiqueta: "% Completado", valor: r.porcentaje + "%" },
-      { clase: "", etiqueta: "Quizzes", valor: r.quizzes },
+      { clase: "ok", etiqueta: "Racha (días)", valor: rch.actual },
       { clase: "", etiqueta: "Promedio general", valor: r.promedio == null ? "—" : r.promedio },
     ];
     el.innerHTML = cards.map((c) => `
@@ -53,13 +58,37 @@ async function cargarResumen() {
         <div class="valor">${esc(c.valor)}</div>
         <div class="etiqueta">${esc(c.etiqueta)}</div>
       </div>`).join("");
+
+    insEl.innerHTML = ins.length
+      ? `<div class="insights-box">${ins.map((i) => `<p>💡 ${esc(i)}</p>`).join("")}</div>`
+      : "";
   } catch (e) {
     el.innerHTML = `<div class="mensaje error">${esc(e.message)}</div>`;
   }
 }
 
 // ---------- Gráficos ----------
-const COLORES = ["#38bdf8", "#a78bfa", "#34d399", "#fbbf24", "#f472b6", "#60a5fa", "#fb923c", "#22d3ee", "#a3e635", "#e879f9", "#4ade80", "#facc15"];
+const centroTexto = {
+  id: "centroTexto",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    if (!meta.data.length) return;
+    const { x, y } = meta.data[0];
+    const texto = chart.config.options.plugins.centroTexto;
+    if (!texto) return;
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 34px Segoe UI, sans-serif";
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillText(texto.linea1, x, y - 10);
+    ctx.font = "14px Segoe UI, sans-serif";
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(texto.linea2, x, y + 20);
+    ctx.restore();
+  },
+};
 
 function crearOActualizar(id, config) {
   if (charts[id]) charts[id].destroy();
@@ -69,47 +98,28 @@ function crearOActualizar(id, config) {
 
 async function cargarGraficos() {
   try {
-    const [nivel, cats] = await Promise.all([
-      fetchJSON("/api/por-nivel"),
-      fetchJSON("/api/por-categoria"),
-    ]);
-
-    crearOActualizar("chartNivel", {
-      type: "bar",
+    const r = await fetchJSON("/api/resumen");
+    crearOActualizar("chartGlobal", {
+      type: "doughnut",
       data: {
-        labels: nivel.map((n) => n.nivel),
+        labels: ["Vistos", "Pendientes"],
         datasets: [{
-          label: "% Completado",
-          data: nivel.map((n) => n.porcentaje),
-          backgroundColor: "#38bdf8",
+          data: [r.vistos, r.pendientes],
+          backgroundColor: ["#22c55e", "#334155"],
+          borderColor: "#0f172a",
+          borderWidth: 2,
         }],
       },
-      options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } },
-    });
-
-    crearOActualizar("chartCategoria", {
-      type: "bar",
-      data: {
-        labels: cats.map((c) => c.categoria),
-        datasets: [
-          { label: "Videos", data: cats.map((c) => c.videos), backgroundColor: COLORES },
-          { label: "% Completado", data: cats.map((c) => c.porcentaje), backgroundColor: "#1e293b", borderColor: "#38bdf8", borderWidth: 1 },
-        ],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "65%",
+        plugins: {
+          legend: { position: "bottom", labels: { color: "#e2e8f0", padding: 16, font: { size: 13 } } },
+          centroTexto: { linea1: r.porcentaje + "%", linea2: "completado" },
+        },
       },
-      options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } },
-    });
-
-    crearOActualizar("chartPromedio", {
-      type: "bar",
-      data: {
-        labels: cats.map((c) => c.categoria),
-        datasets: [{
-          label: "Promedio de notas",
-          data: cats.map((c) => c.promedio == null ? null : c.promedio),
-          backgroundColor: "#a78bfa",
-        }],
-      },
-      options: { responsive: true, scales: { y: { beginAtZero: true, max: 10 } } },
+      plugins: [centroTexto],
     });
   } catch (e) {
     console.error(e);
