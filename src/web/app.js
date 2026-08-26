@@ -7,6 +7,7 @@ const CATEGORIAS = [
 
 const estado = { pagina: 1, limite: 20, filtros: { nivel: "", categoria: "", texto: "", estado: "" } };
 const charts = {};
+let rolActual = "usuario";
 
 function esc(s) {
   const div = document.createElement("div");
@@ -51,7 +52,7 @@ async function cargarResumen() {
       { clase: "warn", etiqueta: "Pendientes", valor: r.pendientes },
       { clase: "acento", etiqueta: "% Completado", valor: r.porcentaje + "%" },
       { clase: "ok", etiqueta: "Racha (días)", valor: rch.actual },
-      { clase: "", etiqueta: "Promedio general", valor: r.promedio == null ? "—" : r.promedio },
+      { clase: "", etiqueta: "Promedio general", valor: r.promedio == null ? "—" : Number(r.promedio).toFixed(2) },
     ];
     el.innerHTML = cards.map((c) => `
       <div class="card ${c.clase}">
@@ -98,7 +99,10 @@ function crearOActualizar(id, config) {
 
 async function cargarGraficos() {
   try {
-    const r = await fetchJSON("/api/resumen");
+    const [r, stats] = await Promise.all([
+      fetchJSON("/api/resumen"),
+      fetchJSON("/api/quiz-stats"),
+    ]);
     crearOActualizar("chartGlobal", {
       type: "doughnut",
       data: {
@@ -120,6 +124,85 @@ async function cargarGraficos() {
         },
       },
       plugins: [centroTexto],
+    });
+
+    const evo = stats.evolucion;
+    const evolLabels = evo.map((d) => d.fecha);
+    const evolData = evo.map((d) => d.promedio);
+    const evolCantidad = evo.map((d) => d.cantidad);
+    crearOActualizar("chartEvolucion", {
+      type: "line",
+      data: {
+        labels: evolLabels,
+        datasets: [{
+          label: "Promedio",
+          data: evolData,
+          borderColor: "#38bdf8",
+          backgroundColor: "rgba(56,189,248,0.15)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 5,
+          pointBackgroundColor: "#38bdf8",
+        }, {
+          label: "Quizzes",
+          data: evolCantidad,
+          borderColor: "#22c55e",
+          backgroundColor: "rgba(34,197,94,0.15)",
+          fill: false,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: "#22c55e",
+          yAxisID: "y1",
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: "#94a3b8" }, grid: { color: "#1e293b" } },
+          y: { min: 0, max: 10, ticks: { color: "#94a3b8" }, grid: { color: "#1e293b" }, title: { display: true, text: "Promedio", color: "#94a3b8" } },
+          y1: { position: "right", min: 0, ticks: { color: "#94a3b8", stepSize: 1 }, grid: { drawOnChartArea: false }, title: { display: true, text: "Quizzes", color: "#94a3b8" } },
+        },
+        plugins: {
+          legend: { labels: { color: "#e2e8f0" } },
+          tooltip: {
+            callbacks: {
+              afterBody: (items) => {
+                const idx = items[0].dataIndex;
+                return `Quizzes: ${evolCantidad[idx]}`;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const dist = stats.distribucion;
+    const distColores = ["#ef4444", "#f59e0b", "#eab308", "#22c55e", "#38bdf8"];
+    crearOActualizar("chartDistribucion", {
+      type: "bar",
+      data: {
+        labels: dist.map((d) => d.rango),
+        datasets: [{
+          label: "Quizzes",
+          data: dist.map((d) => d.cantidad),
+          backgroundColor: distColores,
+          borderColor: distColores.map((c) => c),
+          borderWidth: 1,
+          borderRadius: 6,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: "#94a3b8" }, grid: { color: "#1e293b" } },
+          y: { beginAtZero: true, ticks: { color: "#94a3b8", stepSize: 1 }, grid: { color: "#1e293b" } },
+        },
+        plugins: {
+          legend: { display: false },
+        },
+      },
     });
   } catch (e) {
     console.error(e);
@@ -167,10 +250,13 @@ function filaVideo(v) {
   const btn = v.completado
     ? `<button class="btn-mini" data-accion="desmarcar" data-id="${v.id}">Desmarcar</button>`
     : `<button class="btn-mini visto" data-accion="marcar" data-id="${v.id}">Marcar visto</button>`;
+  const titulo = v.url
+    ? `<a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.titulo)}</a>`
+    : esc(v.titulo);
   return `
     <tr>
       <td>${v.id}</td>
-      <td class="titulo">${esc(v.titulo)}</td>
+      <td class="titulo">${titulo}</td>
       <td>${esc(v.nivel)}</td>
       <td>${esc(v.categorias || "—")}</td>
       <td>${tag}</td>
@@ -178,7 +264,7 @@ function filaVideo(v) {
       <td class="acciones">
         ${btn}
         <input type="number" class="nota-input" min="0" max="10" step="0.5" placeholder="Nota">
-        <button class="btn-mini" data-accion="nota" data-id="${v.id}">Guardar</button>
+        <button class="btn-mini${v.intentos > 0 ? ' quiz-hecho' : ''}" data-accion="nota" data-id="${v.id}">Guardar</button>
       </td>
     </tr>`;
 }
@@ -197,8 +283,9 @@ document.querySelector("#tablaVideos tbody").addEventListener("click", async (e)
       const valor = parseFloat(input.value.replace(",", "."));
       if (isNaN(valor) || valor < 0 || valor > 10) { alert("Nota inválida (0-10)."); return; }
       await fetchJSON(`/api/videos/${id}/nota`, { ...cuerpo, body: JSON.stringify({ nota: valor }) });
+      input.value = "";
     }
-    await Promise.all([cargarVideos(), cargarResumen()]);
+    await Promise.all([cargarVideos(), cargarResumen(), cargarGraficos()]);
   } catch (err) {
     alert(err.message);
   }
@@ -232,8 +319,10 @@ document.getElementById("btnPrev").addEventListener("click", () => {
   if (estado.pagina > 1) { estado.pagina--; cargarVideos(); }
 });
 document.getElementById("btnNext").addEventListener("click", () => {
-  estado.pagina++;
-  cargarVideos();
+  if (!document.getElementById("btnNext").disabled) {
+    estado.pagina++;
+    cargarVideos();
+  }
 });
 
 // ---------- Recomendaciones ----------
@@ -272,15 +361,81 @@ document.getElementById("recomLista").addEventListener("click", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completado: true }),
     });
-    await Promise.all([cargarRecomendaciones(), cargarResumen()]);
+    await Promise.all([cargarRecomendaciones(), cargarResumen(), cargarGraficos()]);
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+// ---------- Reset progreso ----------
+document.getElementById("btnResetProgreso").addEventListener("click", async () => {
+  if (!confirm("¿Estás seguro? Se borrarán todos los videos marcados y las notas de quiz.")) return;
+  try {
+    await fetchJSON("/api/reset-progreso", { method: "POST" });
+    await Promise.all([cargarResumen(), cargarGraficos(), cargarVideos(), cargarRecomendaciones()]);
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+// ---------- Logout ----------
+document.getElementById("btnLogout").addEventListener("click", async () => {
+  await fetch("/logout", { method: "POST" });
+  window.location.href = "/login";
+});
+
+// ---------- Usuarios ----------
+async function cargarUsuarios() {
+  const el = document.getElementById("listaUsuarios");
+  try {
+    const usuarios = await fetchJSON("/api/usuarios");
+    if (!usuarios.length) { el.innerHTML = `<div class="mensaje">Sin usuarios.</div>`; return; }
+    el.innerHTML = `<div class="tabla-wrap"><table class="tabla-usuarios">
+      <thead><tr><th>Usuario</th>${rolActual === "admin" ? "<th>Acciones</th>" : ""}</tr></thead>
+      <tbody>${usuarios.map((u) => `
+        <tr>
+          <td>${esc(u.username)}</td>
+          ${rolActual === "admin" && u.username !== "admin"
+            ? `<td><button class="btn-mini btn-eliminar" data-id="${u.id}">Eliminar</button></td>`
+            : rolActual === "admin" ? `<td><span class="texto-suave">—</span></td>` : ""}
+        </tr>`).join("")}
+      </tbody></table></div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="mensaje error">${esc(e.message)}</div>`;
+  }
+}
+
+document.getElementById("listaUsuarios").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".btn-eliminar");
+  if (!btn) return;
+  if (!confirm("¿Eliminar este usuario?")) return;
+  try {
+    await fetchJSON(`/api/usuarios/${btn.dataset.id}`, { method: "DELETE" });
+    cargarUsuarios();
   } catch (err) {
     alert(err.message);
   }
 });
 
 // ---------- Inicio ----------
-poblarFiltros();
-cargarResumen();
-cargarGraficos();
-cargarVideos();
-cargarRecomendaciones();
+async function init() {
+  try {
+    const data = await fetchJSON("/api/rol");
+    rolActual = data.rol || "usuario";
+  } catch {
+    rolActual = "usuario";
+  }
+
+  poblarFiltros();
+  cargarResumen();
+  cargarGraficos();
+  cargarVideos();
+  cargarRecomendaciones();
+
+  if (rolActual === "admin") {
+    cargarUsuarios();
+  } else {
+    document.querySelector('[data-tab="usuarios"]').style.display = "none";
+  }
+}
+init();

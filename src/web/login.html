@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión - EngVid Learning Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --borde: #334155;
+      --texto: #e2e8f0;
+      --texto-suave: #94a3b8;
+      --acento: #38bdf8;
+      --peligro: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--texto);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-box {
+      background: var(--panel);
+      border: 1px solid var(--borde);
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-box h1 { font-size: 1.6rem; margin-bottom: 6px; }
+    .login-box .sub { color: var(--texto-suave); font-size: .9rem; margin-bottom: 28px; }
+    .campo { margin-bottom: 16px; text-align: left; }
+    .campo label { display: block; font-size: .85rem; color: var(--texto-suave); margin-bottom: 6px; }
+    .campo input {
+      width: 100%;
+      background: var(--bg);
+      color: var(--texto);
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .campo input:focus { border-color: var(--acento); }
+    .btn-login {
+      width: 100%;
+      background: var(--acento);
+      color: #082f49;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: filter .15s;
+    }
+    .btn-login:hover { filter: brightness(1.1); }
+    .error {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid var(--peligro);
+      color: var(--peligro);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-size: .9rem;
+    }
+    .msg-login {
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-size: .9rem;
+    }
+    .msg-login.error {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid var(--peligro);
+      color: var(--peligro);
+    }
+    .msg-login.ok {
+      background: rgba(34,197,94,0.15);
+      border: 1px solid #22c55e;
+      color: #22c55e;
+    }
+    .toggle-link {
+      margin-top: 20px;
+      font-size: .9rem;
+      color: var(--texto-suave);
+    }
+    .toggle-link a {
+      color: var(--acento);
+      text-decoration: none;
+    }
+    .toggle-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h1>📚 EngVid Tracker</h1>
+    <p class="sub" id="subTitulo">Iniciá sesión para acceder al dashboard</p>
+
+    <div id="msgGeneral" class="msg-login" style="display:none;"></div>
+
+    <form id="loginForm">
+      <div class="campo">
+        <label for="username">Usuario</label>
+        <input type="text" id="username" name="username" required autofocus>
+      </div>
+      <div class="campo">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn-login">Ingresar</button>
+    </form>
+
+    <form id="registroForm" style="display:none;">
+      <div class="campo">
+        <label for="regUsername">Usuario</label>
+        <input type="text" id="regUsername" required>
+      </div>
+      <div class="campo">
+        <label for="regPassword">Contraseña</label>
+        <input type="password" id="regPassword" required>
+      </div>
+      <button type="submit" class="btn-login">Crear cuenta</button>
+    </form>
+
+    <p class="toggle-link">
+      <a href="#" id="toggleAuth">Crear cuenta</a>
+    </p>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const registroForm = document.getElementById("registroForm");
+    const toggleLink = document.getElementById("toggleAuth");
+    const subTitulo = document.getElementById("subTitulo");
+    const msgGeneral = document.getElementById("msgGeneral");
+
+    let mostrandoRegistro = false;
+
+    toggleLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      msgGeneral.style.display = "none";
+      mostrandoRegistro = !mostrandoRegistro;
+      if (mostrandoRegistro) {
+        loginForm.style.display = "none";
+        registroForm.style.display = "block";
+        subTitulo.textContent = "Creá tu cuenta para comenzar";
+        toggleLink.textContent = "Iniciar sesión";
+      } else {
+        loginForm.style.display = "block";
+        registroForm.style.display = "none";
+        subTitulo.textContent = "Iniciá sesión para acceder al dashboard";
+        toggleLink.textContent = "Crear cuenta";
+      }
+    });
+
+    function mostrarMsg(texto, tipo) {
+      msgGeneral.textContent = texto;
+      msgGeneral.className = "msg-login " + tipo;
+      msgGeneral.style.display = "block";
+    }
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msgGeneral.style.display = "none";
+      const body = new URLSearchParams({
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value,
+      });
+      try {
+        const resp = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
+          redirect: "manual",
+        });
+        if (resp.status === 200) {
+          window.location.href = "/";
+        } else {
+          const data = await resp.json();
+          mostrarMsg(data.detail || "Credenciales incorrectas", "error");
+        }
+      } catch {
+        mostrarMsg("Error de conexión", "error");
+      }
+    });
+
+    registroForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msgGeneral.style.display = "none";
+      const username = document.getElementById("regUsername").value.trim();
+      const password = document.getElementById("regPassword").value;
+      if (!username || !password) { mostrarMsg("Completá ambos campos", "error"); return; }
+      try {
+        const resp = await fetch("/registro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        if (resp.ok) {
+          mostrarMsg("Cuenta creada. Ahora iniciá sesión.", "ok");
+          registroForm.style.display = "none";
+          loginForm.style.display = "block";
+          mostrandoRegistro = false;
+          subTitulo.textContent = "Iniciá sesión para acceder al dashboard";
+          toggleLink.textContent = "Crear cuenta";
+          document.getElementById("username").value = username;
+          document.getElementById("password").value = "";
+        } else {
+          const data = await resp.json();
+          mostrarMsg(data.detail || "Error al crear cuenta", "error");
+        }
+      } catch {
+        mostrarMsg("Error de conexión", "error");
+      }
+    });
+  </script>
+</body>
+</html>

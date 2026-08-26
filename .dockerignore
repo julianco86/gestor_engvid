@@ -1,0 +1,12 @@
+.venv/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+data/*.db
+.vscode/
+.idea/
+*.bat
+README.md
+GUIA_DE_USO.md
+*.pdf

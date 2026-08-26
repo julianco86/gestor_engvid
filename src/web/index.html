@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EngVid Learning Tracker</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-  <link rel="stylesheet" href="/static/style.css?v=3">
+  <link rel="stylesheet" href="/static/style.css?v=6">
 </head>
 <body>
   <header>
     <h1>📚 EngVid Learning Tracker</h1>
     <p>Tu panel personal de progreso en inglés</p>
+    <button id="btnLogout" class="btn-logout">Cerrar sesión</button>
   </header>
 
   <nav class="tabs">
@@ -18,12 +19,16 @@
     <button class="tab" data-tab="graficos">Gráficos</button>
     <button class="tab" data-tab="videos">Videos</button>
     <button class="tab" data-tab="recomendaciones">Recomendaciones</button>
+    <button class="tab" data-tab="usuarios">Usuarios</button>
   </nav>
 
   <main>
     <section id="resumen" class="panel active">
       <div class="cards" id="cards"></div>
       <div id="insights"></div>
+      <div class="danger-zone">
+        <button id="btnResetProgreso" class="btn btn-danger">Resetear progreso</button>
+      </div>
     </section>
 
     <section id="graficos" class="panel">
@@ -31,6 +36,18 @@
         <h2>Progreso global</h2>
         <div class="chart-canvas">
           <canvas id="chartGlobal"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <h2>Evolución de notas de quiz</h2>
+        <div class="chart-canvas">
+          <canvas id="chartEvolucion"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <h2>Distribución de notas</h2>
+        <div class="chart-canvas">
+          <canvas id="chartDistribucion"></canvas>
         </div>
       </div>
     </section>
@@ -76,9 +93,16 @@
     <section id="recomendaciones" class="panel">
       <div id="recomLista"></div>
     </section>
+
+    <section id="usuarios" class="panel">
+      <div class="usuarios-box">
+        <h2>Usuarios</h2>
+        <div id="listaUsuarios"></div>
+      </div>
+    </section>
   </main>
 
   <script src="/static/vendor/chart.umd.min.js"></script>
-  <script src="/static/app.js?v=5"></script>
+  <script src="/static/app.js?v=10"></script>
 </body>
 </html>

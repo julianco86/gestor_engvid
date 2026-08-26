@@ -14,6 +14,7 @@ CATEGORIAS = [
 ]
 
 NIVELES = ["Beginner", "Intermediate", "Advanced"]
+NIVELES_TODOS = NIVELES + ["Unspecified"]
 
 NIVEL_ORDEN = {"Beginner": 1, "Intermediate": 2, "Advanced": 3}
 

@@ -10,9 +10,9 @@ import uvicorn
 
 from src.api import app
 
-HOST = "127.0.0.1"
-PORT = 8000
-URL = f"http://{HOST}:{PORT}"
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = int(os.environ.get("PORT", 8000))
+URL = f"http://localhost:{PORT}"
 
 
 def abrir_navegador():

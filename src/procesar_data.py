@@ -13,12 +13,6 @@ from src.conexion import RUTA_CSV_CRUDO, RUTA_CSV_LIMPIO
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
 
-print("Cargando CSV desde:", RUTA_CSV_CRUDO)
-try:
-    df = pd.read_csv(RUTA_CSV_CRUDO)
-except UnicodeDecodeError:
-    df = pd.read_csv(RUTA_CSV_CRUDO, encoding="latin-1")
-
 nivel_regex = re.compile(r"(\d+-)?(Beginner|Intermediate|Advanced)", re.IGNORECASE)
 
 
@@ -42,22 +36,33 @@ def nivel_principal(texto):
     return max(niveles, key=lambda n: NIVEL_ORDEN[n])
 
 
-df["Niveles"] = df["Detalles"].apply(extraer_niveles).apply(lambda ls: ", ".join(ls))
-df["Nivel"] = df["Detalles"].apply(nivel_principal)
+def procesar():
+    print("Cargando CSV desde:", RUTA_CSV_CRUDO)
+    try:
+        df = pd.read_csv(RUTA_CSV_CRUDO)
+    except UnicodeDecodeError:
+        df = pd.read_csv(RUTA_CSV_CRUDO, encoding="latin-1")
 
-df["Detalles"] = (
-    df["Detalles"]
-    .str.replace(r"\d+-?(Beginner|Intermediate|Advanced)", "", regex=True)
-    .str.replace(r"[\s|]+", " ", regex=True)
-    .str.strip()
-)
+    df["Niveles"] = df["Detalles"].apply(extraer_niveles).apply(lambda ls: ", ".join(ls))
+    df["Nivel"] = df["Detalles"].apply(nivel_principal)
 
-df["Categorias"] = df["Detalles"].apply(categorias_como_texto)
+    df["Detalles"] = (
+        df["Detalles"]
+        .str.replace(r"\d+-?(Beginner|Intermediate|Advanced)", "", regex=True)
+        .str.replace(r"[\s|]+", " ", regex=True)
+        .str.strip()
+    )
 
-df.to_csv(RUTA_CSV_LIMPIO, index=False)
+    df["Categorias"] = df["Detalles"].apply(categorias_como_texto)
 
-print(df[["ID", "Titulo", "Nivel", "Categorias"]].head(50).to_string(index=False))
-print(f"\n[{len(df)} filas x {len(df.columns)} columnas]")
-print("Distribución por nivel:")
-print(df["Nivel"].value_counts().to_string())
-print(f"\nCSV limpio guardado en: {RUTA_CSV_LIMPIO}")
+    df.to_csv(RUTA_CSV_LIMPIO, index=False)
+
+    print(df[["ID", "Titulo", "Nivel", "Categorias"]].head(50).to_string(index=False))
+    print(f"\n[{len(df)} filas x {len(df.columns)} columnas]")
+    print("Distribución por nivel:")
+    print(df["Nivel"].value_counts().to_string())
+    print(f"\nCSV limpio guardado en: {RUTA_CSV_LIMPIO}")
+
+
+if __name__ == "__main__":
+    procesar()
