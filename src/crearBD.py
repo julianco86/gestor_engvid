@@ -8,7 +8,7 @@ import pandas as pd
 from sqlalchemy import insert
 
 from src.conexion import RUTA_CSV_LIMPIO, RUTA_DB, obtener_engine
-from src.modelos import Base, Progreso, Video
+from src.modelos import Base, Progreso, Usuario, Video
 
 
 def _limpiar_valor(valor):
@@ -44,6 +44,14 @@ def crear_bd():
             conn.exec_driver_sql("CREATE INDEX idx_progreso_user ON progreso(user_id)")
         except Exception:
             pass
+
+    # Crear usuario admin si no existe
+    from src.auth import crear_usuario
+    try:
+        crear_usuario("admin", "admin123")
+        print("Usuario admin creado (admin / admin123)")
+    except ValueError:
+        pass  # Ya existe
 
     df = pd.read_csv(RUTA_CSV_LIMPIO)
     df.columns = [c.lower() for c in df.columns]
