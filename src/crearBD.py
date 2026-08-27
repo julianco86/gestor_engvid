@@ -53,6 +53,10 @@ def crear_bd():
     except ValueError:
         pass  # Ya existe
 
+    # Asegurar que admin tenga rol admin
+    with engine.begin() as conn:
+        conn.exec_driver_sql("UPDATE usuarios SET rol = 'admin' WHERE username = 'admin'")
+
     df = pd.read_csv(RUTA_CSV_LIMPIO)
     df.columns = [c.lower() for c in df.columns]
 
