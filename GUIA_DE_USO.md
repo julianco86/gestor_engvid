@@ -1,62 +1,75 @@
-# 🚀 Guía de uso rápida (para colaboradoras/es)
+# Guía de uso rapida (para colaboradores)
 
-Esta guía explica cómo poner en marcha el proyecto en tu computadora sin tocar
-nada de código ni comandos complicados.
+Esta guia explica como poner en marcha el proyecto en tu computadora.
 
-## Requisito único: tener Python instalado
+## Requisito: tener Python 3.10+ instalado
 
 1. Entrá a https://www.python.org/downloads/
-2. Descargá la última versión (3.10 o superior).
+2. Descargá la ultima version (3.10 o superior).
 3. Al instalarla, **marcá la casilla "Add Python to PATH"** antes de hacer clic en "Install Now".
-4. Terminá la instalación.
+4. Terminá la instalacion.
 
-> 💡 En Windows, si el instalador te pregunta "Disable path length limit", marcá esa
-> opción también (es recomendable).
+> En Windows, si el instalador te pregunta "Disable path length limit", marcala tambien.
 
-## Puesta en marcha (solo la primera vez)
+## Primera vez: instalar el entorno
 
-1. Cloná el repositorio (o descargá el ZIP y descomprimilo).
-2. Hacé **doble clic** en **`setup.bat`**.
-   - Se abre una ventana negra (consola). Esperá a que termine.
-   - Cuando diga "Setup completado correctamente", presioná cualquier tecla.
-   - Si apareciera algún `[ERROR]`, leelo y avisá: suele ser Python no instalado o
-     sin "Add to PATH".
+1. Clona el repositorio (o descarga el ZIP y descomprimilo).
+2. Hace **doble clic** en **`setup.bat`**.
+   - Se abre una ventana negra (consola). Espera a que termine.
+   - Cuando diga "Setup completado correctamente", presiona cualquier tecla.
 
-## Abrir el panel (todas las veces que quieras usarlo)
+## Abrir el panel (todas las veces)
 
-1. Hacé **doble clic** en **`run.bat`**.
-2. Se abre la consola y, unos segundos después, **se abre tu navegador** con el
-   panel en `http://127.0.0.1:8000`.
-3. Cuando termines, cerrá la ventana de la consola (o presioná `Ctrl+C`).
+1. Hace **doble clic** en **`run.bat`**.
+2. Se abre la consola y el navegador con el panel en `http://127.0.0.1:8000`.
+3. Cuando termines, cerra la ventana de la consola (o presiona `Ctrl+C`).
 
-## Qué podés hacer en el panel
+## Ingresar al sistema
 
-- **Resumen:** tu progreso global (videos vistos, % completado, promedio de notas).
-- **Gráficos:** rendimiento por nivel y por categoría.
-- **Videos:** buscá y filtrá el catálogo; marcá videos como "visto" y guardá la
-  nota de cada quiz.
-- **Recomendaciones:** videos pendientes en las áreas donde tenés el promedio más bajo.
+### Si sos admin
 
-## Cómo se guardan tus datos
+- Usuario: `admin`
+- Contraseña: `admin123`
 
-- Tu progreso personal queda en el archivo `data/engvid_database.db`, **solo en tu
-  computadora**.
-- Ese archivo **no se sube a GitHub** (está ignorado a propósito): cada persona
-  tiene su propio progreso, y el catálogo de videos vive en el repositorio.
+### Si sos usuario nuevo
 
-## Cuando lleguen actualizaciones (git pull)
+1. Andá a la pagina de login
+2. Hace clic en **"Crear cuenta"**
+3. Elegí tu usuario y contraseña
+4. Inicia sesion
 
-- Si otra persona sube cambios al repositorio, hacé `git pull`.
-- Si los cambios tocaron la base de datos, la consola mostrará algún error al
-  abrir el panel; en ese caso, ejecutá de nuevo **`setup.bat`** (recrea la base,
-  no borra tu historial si el catálogo no cambió).
+## Que podes hacer en el panel
 
-## Solución de problemas
+- **Resumen:** progreso global (videos vistos, % completado, promedio de notas, racha de estudio).
+- **Gráficos:** evolucion de notas de quiz, distribucion de notas.
+- **Videos:** buscar y filtrar el catalogo; marcar videos como "visto" y guardar la nota de cada quiz.
+- **Recomendaciones:** videos pendientes en las areas donde estas mas debil.
+- **Usuarios (solo admin):** ver la lista de usuarios y eliminar usuarios.
 
-| Problema | Solución |
+## Progreso independiente
+
+Cada usuario tiene su propio progreso. Tus videos vistos, notas y racha estan separados de los demas usuarios.
+
+## Como se guardan tus datos
+
+- Tu progreso queda en `data/engvid_database.db`, solo en tu computadora.
+- Ese archivo no se sube a GitHub (esta ignorado a proposito).
+- Cada usuario tiene su propio progreso en la misma base de datos.
+
+## Actualizar videos
+
+Si EngVid publica nuevos videos:
+
+1. Correr el scraper: `python src/scraper_selenium.py`
+2. Procesar el CSV: `python src/procesar_data.py`
+3. Push a GitHub: `git add . && git commit -m "Actualizar videos" && git push`
+
+## Solucion de problemas
+
+| Problema | Solucion |
 |---|---|
-| `run.bat` dice "Falta el entorno virtual" | Ejecutá primero `setup.bat` |
-| `setup.bat` dice "Python no encontrado" | Instalá Python marcando "Add to PATH" y reiniciá |
-| El navegador no se abre solo | Abrí manualmente `http://127.0.0.1:8000` en tu navegador |
-| El puerto 8000 está ocupado | Cerrá otros programas o consolas que usen ese puerto |
-| Error raro después de un `git pull` | Ejecutá `setup.bat` de nuevo |
+| `run.bat` dice "Falta el entorno virtual" | Ejecuta primero `setup.bat` |
+| `setup.bat` dice "Python no encontrado" | Instala Python marcando "Add to PATH" y reinicia |
+| El navegador no se abre solo | Abre manualmente `http://127.0.0.1:8000` |
+| El puerto 8000 esta ocupado | Cierra otros programas o consolas que usen ese puerto |
+| Error despues de un `git pull` | Ejecuta `setup.bat` de nuevo |

@@ -1,111 +1,110 @@
-# 🇬🇧 EngVid Learning Tracker
+# EngVid Learning Tracker
 
-> **Un gestor administrativo y de análisis de datos para optimizar el aprendizaje de inglés con EngVid.**
+Dashboard personal para trackear tu progreso de aprendizaje de inglés con [EngVid](https://www.engvid.com/).
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![Selenium](https://img.shields.io/badge/Selenium-Web_Scraping-green)](https://www.selenium.dev/)
-[![Status](https://img.shields.io/badge/Status-En_Desarrollo-orange)]()
+## Inicio rápido
 
-## 📖 Sobre el Proyecto
+```bash
+# 1. Clonar el repo
+git clone https://github.com/julianco86/gestor_engvid.git
+cd gestor_engvid
 
-**EngVid Learning Tracker** nace de una necesidad personal: llevar un control detallado y analítico del progreso educativo en la plataforma [engvid.com](https://www.engvid.com/). Aunque el sitio ofrece contenido increíble, este proyecto busca añadir una capa de gestión personalizada ("Administrative Manager") para convertir el estudio pasivo en un seguimiento activo basado en datos.
+# 2. Crear entorno virtual
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Mac/Linux
 
-El objetivo es dejar de preguntarse "¿qué video vi ayer?" y empezar a responder "¿en qué categoría estoy fallando más?" o "¿cuál es mi rendimiento semanal?".
+# 3. Instalar dependencias
+pip install -r requirements-web.txt
 
-## 🚀 Funcionalidades Principales
+# 4. Crear la base de datos
+python src/crearBD.py
 
-### ✅ Funcionalidades
-- **Extracción Masiva de Datos:** Script automatizado con **Selenium** que recopila el catálogo completo de lecciones (Título, Nivel, Categoría, URL) superando la carga dinámica (JavaScript/Lazy Loading).
-- **Limpieza y Procesamiento:** Normalización de niveles (incluye videos con varios niveles) y extracción de categorías con **Pandas**.
-- **Base de Datos SQLite:** Esquema con dos tablas: `videos` (catálogo) y `progreso` (historial personal).
-- **Tracker de Historial:** Marcar videos como "Visto" / "Pendiente" desde un menú interactivo de consola.
-- **Registro de Quizzes:** Ingresar la nota obtenida en cada quiz de lección (0-10) con contador de intentos.
-- **Dashboard de Estadísticas:** Porcentaje de videos completados por nivel, promedio de calificaciones por categoría, temas más estudiados.
-- **Dashboard Web (FastAPI):** Panel visual interactivo en el navegador con gráficos (Chart.js), filtros de videos, y edición de progreso (marcar visto, notas de quiz).
-- **Recomendador:** Sugerencia de videos pendientes en las áreas donde el puntaje de los quizzes es más bajo.
+# 5. Iniciar el servidor
+python src/iniciar.py
+```
 
-## 🛠️ Tecnologías Utilizadas
+El navegador se abre automáticamente en `http://127.0.0.1:8000`.
 
-* **Lenguaje:** Python 3
-* **Web Scraping:** Selenium Webdriver (Manejo de DOM y contenido dinámico).
-* **Gestión de Drivers:** Webdriver Manager.
-* **Almacenamiento de Datos:** CSV y SQLite (vía SQLAlchemy).
-* **Análisis de Datos:** Pandas.
+## Credenciales por defecto
 
-## ⚙️ Instalación y Uso
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `admin` | `admin123` | Administrador |
 
-> **Modo rápido (recomendado):** seguí la [`GUIA_DE_USO.md`](GUIA_DE_USO.md).
-> 1. Instalá Python 3.10+ (marcando "Add Python to PATH").
-> 2. Doble clic en `setup.bat` (una sola vez).
-> 3. Doble clic en `run.bat` — se abre el navegador con el dashboard.
+Los usuarios nuevos se registran desde la página de login.
 
-### Modo desarrollador
+## Qué hace cada usuario
 
-1.  **Clonar el repositorio:**
-    ```bash
-    git clone [https://github.com/TU_USUARIO/engvid-learning-tracker.git](https://github.com/TU_USUARIO/engvid-learning-tracker.git)
-    cd engvid-learning-tracker
-    ```
+| Función | Admin | Usuario normal |
+|---|---|---|
+| Ver videos, métricas, gráficos | ✅ | ✅ |
+| Marcar videos como vistos | ✅ | ✅ |
+| Guardar notas de quiz | ✅ | ✅ |
+| Resetear su progreso | ✅ | ✅ |
+| Ver lista de usuarios | ✅ | ❌ |
+| Eliminar usuarios | ✅ | ❌ |
 
-2.  **Instalar dependencias:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+Cada usuario tiene su progreso independiente.
 
-3.  **Pipeline de datos:**
-    ```bash
-    # 1. (Opcional) Extraer el catálogo actual de EngVid con Selenium
-    python src/scraper_selenium.py
+## Deploy con Docker
 
-    # 2. Limpiar y normalizar el CSV
-    python src/procesar_data.py
+```bash
+# Build
+docker build -t engvid-tracker .
 
-    # 3. Regenerar la base de datos SQLite
-    python src/crearBD.py
-    ```
+# Run
+docker run -p 8000:8000 engvid-tracker
+```
 
-4.  **Uso diario:**
-    ```bash
-    # Menú interactivo: marcar visto/pendiente, registrar notas, ver progreso
-    python src/tracker.py
+## Deploy en Render
 
-    # Dashboard de estadísticas y recomendaciones
-    python src/analyzer.py
-    # Solo recomendaciones
-    python src/analyzer.py --recomendar
+1. Subir el código a GitHub
+2. En [render.com](https://render.com): New → Web Service → Docker
+3. Puerto: `8000`
+4. La URL pública queda tipo `https://engvid-tracker.onrender.com`
 
-    # Dashboard web (FastAPI) — abrir http://127.0.0.1:8000
-    python -m uvicorn src.api:app --reload
-    ```
+**Nota:** la DB SQLite se regenera en cada reinicio del contenedor.
 
-## 📂 Estructura del Proyecto
+## Estructura del proyecto
 
 ```text
 gestor_engvid/
-├── data/                    # Archivos generados (CSV y base de datos)
-├── src/                     # Código fuente
-│   ├── scraper_selenium.py  # Extracción con Selenium
-│   ├── procesar_data.py     # Limpieza y normalización (Pandas)
-│   ├── crearBD.py           # Creación de la base SQLite
-│   ├── consultas.py         # Queries reutilizables (CLI y web)
-│   ├── api.py               # Backend FastAPI (JSON + frontend)
-│   ├── web/                 # Frontend estático (HTML/CSS/JS + Chart.js)
-│   ├── tracker.py           # CLI: historial y quizzes
-│   ├── analyzer.py          # Dashboard de estadísticas y recomendador
-│   ├── categorias.py        # Definición de categorías/niveles conocidos
-│   ├── conexion.py          # Rutas y conexión a la base de datos
-│   └── modelos.py           # Modelos ORM (videos, progreso)
-├── requirements.txt          # Dependencias completas (incluye scraper)
-├── requirements-web.txt      # Dependencias livianas (solo panel web)
-├── setup.bat                 # Instalación automática (Windows)
-├── run.bat                   # Arranque del panel (Windows)
-├── GUIA_DE_USO.md            # Guía para colaboradoras/es
-├── .gitignore
-└── README.md
+├── data/
+│   ├── engvid_completo.csv          # CSV crudo del scraper
+│   └── engvid_completo_limpio.csv   # CSV procesado
+├── src/
+│   ├── api.py           # Backend FastAPI
+│   ├── auth.py          # Autenticación y sesiones
+│   ├── modelos.py       # Modelos SQLAlchemy (Video, Progreso, Usuario)
+│   ├── consultas.py     # Queries de la base de datos
+│   ├── conexion.py      # Conexión SQLite
+│   ├── crearBD.py       # Creación y migraciones de la DB
+│   ├── categorias.py    # Definición de niveles y categorías
+│   ├── iniciar.py       # Punto de entrada del servidor
+│   ├── scraper_selenium.py  # Scraper de EngVid (Selenium)
+│   ├── procesar_data.py     # Limpieza de CSV (Pandas)
+│   └── web/
+│       ├── index.html   # Dashboard principal
+│       ├── login.html   # Página de login
+│       ├── app.js       # Lógica del frontend
+│       └── style.css    # Estilos (dark theme)
+├── Dockerfile
+├── .dockerignore
+├── requirements-web.txt  # Dependencias del panel web
+├── setup.bat             # Instalación automática (Windows)
+└── run.bat               # Arranque del panel (Windows)
 ```
 
-## ⚠️Disclaimer Ético
+## Actualizar videos de EngVid
 
-Este proyecto es una herramienta educativa y de uso personal para gestionar el progreso de aprendizaje. No tiene relación oficial con EngVid. El script de scraping respeta los tiempos de carga para no saturar el servidor. Por favor, usa esta herramienta responsablemente.
+```bash
+# 1. Correr el scraper (requiere Chrome)
+python src/scraper_selenium.py
 
-Desarrollado con 💙 y Python.
+# 2. Procesar el CSV
+python src/procesar_data.py
+
+# 3. Push a GitHub (Render redeploya solo)
+git add . && git commit -m "Actualizar videos" && git push
+```
