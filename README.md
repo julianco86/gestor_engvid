@@ -108,3 +108,13 @@ python src/procesar_data.py
 # 3. Push a GitHub (Render redeploya solo)
 git add . && git commit -m "Actualizar videos" && git push
 ```
+
+## Próximamente
+
+- **PostgreSQL** — reemplazar SQLite para conservar el progreso entre reinicios en Render
+- **Actualizar videos** — botón en el dashboard para re-scrapear EngVid sin Selenium
+- **Exportar progreso** — descargar tu progreso como CSV o PDF
+- **Sistema de metas** — establecer metas semanales de estudio
+- **Logros/Badges** — insignias por rachas, cantidad de videos, promedio alto
+- **Historial** — timeline de actividad reciente
+- **Tests automatizados** — unit tests para la API y las queries
